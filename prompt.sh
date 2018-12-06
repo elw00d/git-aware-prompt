@@ -5,6 +5,7 @@ find_one_of_vcs_dir() {
   hg_dir=''
   svn_dir=''
   git_dir=''
+  arc_dir=''
 
   # searching the first parent with '.hg' dir inside
   while [[ $scan_dir != "/" ]]; do
@@ -16,6 +17,11 @@ find_one_of_vcs_dir() {
       break
     elif [[ -d "${scan_dir}/.svn" ]]; then
       svn_dir="${scan_dir}"
+      break
+    elif [[ -d "${scan_dir}/.arc" ]]; then
+      if [[ ${scan_dir} != '/home/elwood' ]]; then
+        arc_dir="${scan_dir}"
+      fi
       break
     fi
     scan_dir=$(dirname "$scan_dir")
@@ -59,8 +65,15 @@ find_svn_branch() {
   fi
 }
 
+find_arc_branch() {
+  arc_branch=''
+  if [[ $arc_dir != '' ]]; then
+    arc_branch=$(cat "${arc_dir}"/.arc/HEAD | grep Symbolic | awk '{gsub(/"/, "", $2); print $2}')
+  fi
+}
+
 get_display_branch() {
-  display_branch="${git_branch}${hg_branch}${svn_branch}"
+  display_branch="${git_branch}${hg_branch}${svn_branch}${arc_branch}"
   if [[ $display_branch != '' ]]; then
     # add parentheses and space
     display_branch="(${display_branch}) "
@@ -68,7 +81,7 @@ get_display_branch() {
 }
 
 get_all_info() {
-  find_one_of_vcs_dir; find_git_branch; find_git_dirty; find_hg_branch; find_svn_branch; get_display_branch
+  find_one_of_vcs_dir; find_git_branch; find_git_dirty; find_hg_branch; find_svn_branch; find_arc_branch; get_display_branch
 }
 
 PROMPT_COMMAND="get_all_info; $PROMPT_COMMAND"
